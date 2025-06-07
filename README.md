@@ -1,4 +1,4 @@
-# Expense Tracker
+# Expense Tracker 💰
 
 A simple and efficient web application to track personal expenses, categorize them, and visualize spending habits through summaries and charts.
 
