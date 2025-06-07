@@ -1,31 +1,34 @@
-# Expense Tracker 💸
+# Expense Tracker
 
-A full-stack Java web application to manage daily expenses, with authentication and detailed category/month-wise summaries.
+A simple and efficient web application to track personal expenses, categorize them, and visualize spending habits through summaries and charts.
 
-## 🔧 Tech Stack
+---
 
-- Java 17
-- Spring Boot
-- Spring Security
-- Thymeleaf
-- MySQL
-- JPA (Hibernate)
-- Chart.js (for pie charts)
+## Features
 
-## ✨ Features
+- Add, edit, and delete expenses easily
+- Categorize expenses (e.g., Food, Transport, Utilities)
+- View summary of expenses by category
+- Visualize expenses using pie charts for better insight
+- User authentication (optional, if implemented)
+- Responsive design for desktop and mobile
 
-- User authentication (Spring Security)
-- Add, edit, and delete expenses
-- Filter expenses by category and date
-- Monthly and category-wise expense summaries
-- Interactive pie chart using Chart.js
-- Secure login/logout
-- Clean and professional UI with Thymeleaf templates
+---
 
+## Tech Stack
 
-## 🚀 How to Run Locally
+- **Backend:** Spring Boot (Java)
+- **Frontend:** Thymeleaf, HTML, CSS, JavaScript
+- **Database:** MySQL / H2 (or whichever you use)
+- **Build Tool:** Maven
+- **Version Control:** Git & GitHub
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Tahejib/expense-tracker.git
-   cd expense-tracker
+---
+
+## Installation & Setup
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/Tahejib/Expense-Tracker.git
+cd Expense-Tracker
