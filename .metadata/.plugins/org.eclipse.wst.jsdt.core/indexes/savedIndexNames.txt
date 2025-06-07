@@ -1,0 +1,7 @@
+INDEX VERSION 1.4+C:\Users\HP\OneDrive\Documents\Project\expensetracker\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+790203267.index
+1593519055.index
+2729190021.index
+1474183936.index
+704891425.index
+1380541857.index

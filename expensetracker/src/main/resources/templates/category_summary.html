@@ -1,0 +1,41 @@
+<!-- category_summary.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Expense Summary</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Expense Summary by Category</h2>
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Category Summary</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Category</th>
+                        <th>Total Spent (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${categorySummary}">
+                        <td th:text="${entry.key}">Category</td>
+                        <td th:text="${entry.value}">0.0</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(categorySummary)}">
+                        <td colspan="2" class="text-center text-muted">No data available.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a th:href="@{/expenses}" class="btn btn-secondary">Back to Expense List</a>
+</div>
+</body>
+</html>
+<a th:href="@{/expenses}" class="btn btn-secondary">Back to Expense List</a>

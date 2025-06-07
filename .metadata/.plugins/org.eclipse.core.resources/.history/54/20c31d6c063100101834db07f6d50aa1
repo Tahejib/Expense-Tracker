@@ -1,0 +1,181 @@
+package com.expensetracker.service;
+
+import com.expensetracker.model.Expense;
+import com.expensetracker.model.Category;  // Make sure to import Category
+import com.expensetracker.model.User;
+import com.expensetracker.repository.ExpenseRepository;
+import com.expensetracker.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.TextStyle;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class ExpenseService {
+
+    @Autowired
+    private ExpenseRepository expenseRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public void saveExpense(Expense expense) {
+        expenseRepository.save(expense);
+    }
+
+    public List<Expense> getExpensesForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return expenseRepository.findByUser(user);
+    }
+
+    public void deleteExpenseById(Long id) {
+        expenseRepository.deleteById(id);
+    }
+
+    public Expense getExpenseById(Long id) {
+        return expenseRepository.findById(id).orElse(null);
+    }
+
+    public void saveExpenseForUser(Expense expense, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        expense.setUser(user);
+        expenseRepository.save(expense);
+    }
+
+    public List<Expense> getAllExpensesForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return expenseRepository.findByUser(user);
+    }
+
+    public Map<String, Double> getCategorySummaryForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        List<Expense> expenses = expenseRepository.findByUser(user);
+
+        return expenses.stream()
+                .collect(Collectors.groupingBy(
+                        e -> e.getCategory().toString(),  // Convert enum to string
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+    }
+
+
+    public Map<String, Double> getMonthlySummaryForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        List<Expense> expenses = expenseRepository.findByUser(user);
+
+        Map<Month, Double> tempSummary = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        e -> e.getDate().getMonth(),
+                        TreeMap::new,
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
+
+        return tempSummary.entrySet().stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    public List<Expense> filterExpensesByDateRange(String fromDate, String toDate) {
+        LocalDate from = LocalDate.parse(fromDate);
+        LocalDate to = LocalDate.parse(toDate);
+        return expenseRepository.findByDateBetween(from, to);
+    }
+
+    public List<Expense> getSortedExpenses(String username, String sortBy) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        List<Expense> expenses = expenseRepository.findByUser(user);
+
+        return expenses.stream()
+                .sorted((e1, e2) -> {
+                    switch (sortBy) {
+                        case "amount": return Double.compare(e2.getAmount(), e1.getAmount());
+                        case "category": return e1.getCategory().compareTo(e2.getCategory());
+                        default: return e2.getDate().compareTo(e1.getDate()); // default: date
+                    }
+                })
+                .toList();
+    }
+
+    public List<Expense> getExpensesByMonthYear(Integer month, Integer year, String username) {
+        if (month == null || year == null) {
+            return getAllExpenses(username);
+        }
+
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return expenseRepository.findByUserAndDateBetween(user, start, end);
+    }
+
+    public List<Expense> getAllExpenses(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return expenseRepository.findByUser(user);
+    }
+
+    public List<String> getAllCategories() {
+        return Arrays.stream(Category.values())
+                     .map(Enum::name)
+                     .toList();
+    }
+
+
+    public Map<String, Double> getCategorySummary(String username) {
+        return getCategorySummaryForUser(username);
+    }
+
+    // New methods for category-based filtering
+    public List<Expense> filterByCategory(Category category, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        return expenseRepository.findByUserAndCategory(user, category);
+    }
+
+    // New method for date range filtering
+    public List<Expense> filterByDateRange(LocalDate startDate, LocalDate endDate, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        return expenseRepository.findByUserAndDateBetween(user, startDate, endDate);
+    }
+    
+    public List<Expense> searchExpensesByTitle(String username, String keyword) {
+        return expenseRepository.findByUserUsernameAndTitleContainingIgnoreCase(username, keyword);
+    }
+
+	public Map<String, Double> getMonthlySummary(String username) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public Page<Expense> getExpenses(PageRequest pageRequest) {
+	    return expenseRepository.findAll(pageRequest);
+	}
+
+}
+

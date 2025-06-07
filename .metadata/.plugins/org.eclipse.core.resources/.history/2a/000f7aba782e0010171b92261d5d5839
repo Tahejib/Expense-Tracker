@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Expense Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet" />
+    
+    <style>
+        /* Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeSlideUp 1s ease;
+            transition: transform 0.3s ease;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-card:hover {
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-card h2 {
+            font-weight: bold;
+            color: #f9d423;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem;
+            color: #fff;
+        }
+
+        .form-control:focus {
+            border-color: #f9d423;
+            box-shadow: 0 0 0 0.2rem rgba(249, 212, 35, 0.25);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary {
+            background-color: #f9d423;
+            color: #764ba2;
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #fff26d;
+            color: #5a3f91;
+        }
+
+        .link-text a {
+            color: #f9d423;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link-text a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            margin-top: 1rem;
+            text-align: center;
+        }
+    </style>
+    
+</head>
+
+<body>
+
+<div class="container">
+    
+    <!-- Custom Registration Success Popup -->
+    <div th:if="${param.success}" id="regSuccessPopup" class="position-fixed top-0 end-0 p-4" style="z-index: 1055;">
+        <div class="toast show fade" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <small>Just now</small>
+                <button type="button" class="btn-close btn-close-white ms-2 mb-1" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                🎉 Registration successful! Please login below.
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    <div th:if="${param.error}" class="alert alert-danger">
+        Invalid username or password. Please try again.
+    </div>
+
+    <div class="auth-card">
+        <h2>Login</h2>
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <input type="

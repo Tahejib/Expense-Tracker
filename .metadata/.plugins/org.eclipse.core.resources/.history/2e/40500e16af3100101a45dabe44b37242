@@ -1,0 +1,248 @@
+package com.expensetracker.controller;
+
+import com.expensetracker.model.Expense;
+import com.expensetracker.repository.UserRepository;
+import com.expensetracker.service.ExpenseService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.Principal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+public class ExpenseController {
+
+    @Autowired
+    private ExpenseService expenseService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    // ======================= CHART DATA METHOD ==========================
+    private void addChartDataToModel(String username, Model model) {
+        Map<String, Double> categorySummary = expenseService.getCategorySummary(username);
+        Map<String, Double> monthlySummary = expenseService.getMonthlySummary(username);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            model.addAttribute("categorySummaryJson", objectMapper.writeValueAsString(categorySummary));
+            model.addAttribute("monthlySummaryJson", objectMapper.writeValueAsString(monthlySummary));
+        } catch (Exception e) {
+            model.addAttribute("categorySummaryJson", "{}");
+            model.addAttribute("monthlySummaryJson", "{}");
+            e.printStackTrace();
+        }
+    }
+
+    // ========================== VIEW EXPENSES ============================
+    @GetMapping("/expenses")
+    public String showExpenses(Model model, Principal principal) {
+        String username = principal.getName();
+        List<Expense> expenses = expenseService.getAllExpenses(username);
+        model.addAttribute("expenses", expenses);
+        model.addAttribute("expense", new Expense());
+        addChartDataToModel(username, model);
+        return "expenses";
+    }
+
+    // ========================== ADD EXPENSE ============================
+	
+	  @PostMapping("/expenses/add") public String addExpense(@Valid @ModelAttribute
+	  Expense expense, BindingResult result,
+	  
+	  @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes
+	  redirectAttributes) { if (userDetails == null) return "redirect:/login"; if
+	  (result.hasErrors()) return "expenses";
+	  
+	  String username = userDetails.getUsername();
+	  expenseService.saveExpenseForUser(expense, username);
+	  redirectAttributes.addFlashAttribute("message",
+	  "Expense added successfully!"); return "redirect:/expenses"; }
+	 
+
+    // ========================== EDIT EXPENSE ============================
+    @GetMapping("/expenses/edit/{id}")
+    public String showEditExpenseForm(@PathVariable Long id, Model model,
+                                      @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) return "redirect:/login";
+
+        Expense expense = expenseService.getExpenseById(id);
+        model.addAttribute("expense", expense);
+        return "add_expense";
+    }
+
+	/*
+	 * @PostMapping("/expenses/edit/{id}") public String updateExpense(@PathVariable
+	 * Long id,
+	 * 
+	 * @Valid @ModelAttribute Expense expense, BindingResult result,
+	 * 
+	 * @AuthenticationPrincipal UserDetails userDetails, RedirectAttributes
+	 * redirectAttributes) { if (userDetails == null) return "redirect:/login"; if
+	 * (result.hasErrors()) return "add_expense";
+	 * 
+	 * String username = userDetails.getUsername();
+	 * expenseService.updateExpenseForUser(id, expense, username);
+	 * redirectAttributes.addFlashAttribute("message",
+	 * "Expense updated successfully!"); return "redirect:/expenses"; }
+	 */
+    // ========================== DELETE EXPENSE ============================
+    @GetMapping("/expenses/delete/{id}")
+    public String deleteExpense(@PathVariable Long id, Principal principal) {
+        String username = principal.getName();
+        expenseService.deleteExpenseForUser(id, username);
+        return "redirect:/expenses?message=Expense+deleted+successfully";
+    }
+
+
+    // ===================== FILTER BY DATE RANGE ============================
+    @GetMapping("/filter")
+    public String filterExpensesByDateRange(@RequestParam String fromDate,
+                                            @RequestParam String toDate,
+                                            @AuthenticationPrincipal UserDetails userDetails,
+                                            Model model) {
+        String username = userDetails.getUsername();
+        try {
+            LocalDate from = LocalDate.parse(fromDate);
+            LocalDate to = LocalDate.parse(toDate);
+
+            List<Expense> filteredExpenses = expenseService.getExpensesForUser(username).stream()
+                    .filter(e -> !e.getDate().isBefore(from) && !e.getDate().isAfter(to))
+                    .toList();
+
+            model.addAttribute("expenses", filteredExpenses);
+            model.addAttribute("expense", new Expense());
+            addChartDataToModel(username, model);
+        } catch (DateTimeParseException e) {
+            model.addAttribute("error", "Invalid date format");
+            return "expenses";
+        }
+
+        return "expenses";
+    }
+
+    // ========================== SORTING ============================
+    @GetMapping("/expenses/sort")
+    public String sortExpenses(@RequestParam String sortBy,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               Model model) {
+        String username = userDetails.getUsername();
+        List<Expense> sortedExpenses = expenseService.getSortedExpenses(username, sortBy);
+        model.addAttribute("expenses", sortedExpenses);
+        model.addAttribute("expense", new Expense());
+        addChartDataToModel(username, model);
+        return "expenses";
+    }
+
+    // ====================== EXPORT TO CSV =============================
+    @GetMapping("/expenses/export")
+    public void exportToCSV(HttpServletResponse response, Principal principal) throws IOException {
+        response.setContentType("text/csv");
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        response.setHeader("Content-Disposition", "attachment; filename=expenses_" + timestamp + ".csv");
+
+        List<Expense> expenses = expenseService.getAllExpenses(principal.getName());
+        PrintWriter writer = response.getWriter();
+        writer.println("ID,Title,Amount,Category,Date");
+
+        for (Expense exp : expenses) {
+            writer.println(exp.getId() + "," +
+                           exp.getTitle() + "," +
+                           exp.getAmount() + "," +
+                           exp.getCategory() + "," +
+                           exp.getDate());
+        }
+
+        writer.flush();
+        writer.close();
+    }
+
+    // ===================== FILTER BY CATEGORY + MONTH/YEAR =====================
+    @GetMapping("/expenses/filterByCategory")
+    public String filterExpensesByCategory(@RequestParam(required = false) Integer month,
+                                           @RequestParam(required = false) Integer year,
+                                           Model model,
+                                           Principal principal) {
+        String username = principal.getName();
+        List<Expense> filteredExpenses = expenseService.getExpensesByMonthYear(month, year, username);
+        model.addAttribute("expenses", filteredExpenses);
+        model.addAttribute("newExpense", new Expense());
+        model.addAttribute("categories", expenseService.getAllCategories());
+        addChartDataToModel(username, model);
+        return "expenses";
+    }
+
+    // ====================== SEARCH EXPENSES ============================
+    @GetMapping("/expenses/search")
+    public String searchExpenses(@RequestParam String keyword,
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 Model model) {
+        String username = userDetails.getUsername();
+        List<Expense> searchResults = expenseService.searchExpensesByTitle(username, keyword);
+
+        model.addAttribute("expenses", searchResults);
+        model.addAttribute("expense", new Expense());
+        model.addAttribute("categories", getPredefinedCategories());
+        addChartDataToModel(username, model);
+        return "expenses";
+    }
+
+    // ======================= FORGOT PASSWORD =============================
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("email") String email) {
+        // Placeholder: add logic to send reset link later
+        return "redirect:/login?resetRequested";
+    }
+
+    // ======================= UTILITY METHODS =============================
+    private List<String> getPredefinedCategories() {
+        return List.of("Food", "Travel", "Health", "Utilities", "Entertainment", "Shopping", "Other");
+    }
+    
+    @GetMapping("/expenses/add")
+    public String showAddExpenseForm(Model model) {
+        model.addAttribute("expense", new Expense());
+        return "add_expense"; // must match the filename (without .html)
+    }
+
+    
+    @PostMapping("/expenses/save")
+    public String saveExpense(
+            @Valid @ModelAttribute("expense") Expense expense,
+            BindingResult result,
+            Principal principal
+    ) {
+        if (result.hasErrors()) {
+            return "expenses/form"; // ✅ return to the form if validation fails
+        }
+
+        String username = principal.getName();
+        if (expense.getId() != null) {
+            expenseService.updateExpenseForUser(expense.getId(), expense, username);
+        } else {
+            expenseService.saveExpenseForUser(expense, username);
+        }
+
+        return "redirect:/expenses?message=Expense+added+successfully";
+    }
+
+
+
+}

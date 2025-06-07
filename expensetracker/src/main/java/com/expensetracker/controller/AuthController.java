@@ -1,0 +1,31 @@
+package com.expensetracker.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+public class AuthController {
+	
+	 @GetMapping("/forgot-password")
+	    public String showForgotPasswordPage() {
+	        return "forgot-password"; // your Thymeleaf template name
+	    }
+
+	    @PostMapping("/forgot-password")
+	    public String processForgotPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
+	        // TODO: Implement email check and sending reset link logic here
+
+	        // For now, simulate success
+	        redirectAttributes.addAttribute("sent", "true");
+	        return "redirect:/forgot-password";
+	    }
+    @GetMapping("/login")
+    public String showLoginPage(Model model) {
+        return "login"; // This should be the view name for your login page (login.html).
+    }
+}
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" th:href="@{/styles.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/expenses}">Expense Tracker</a>
+        <div class="d-flex">
+            <span class="navbar-text text-white me-3" th:text="'Welcome, ' + ${username} + '!'"></span>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-light">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container mt-4">
+
+    <!-- Heading & Add Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Expense List</h2>
+        <!-- Modal trigger button -->
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">+ Add New Expense</button>
+</div>
+
+    <!-- Expense Table -->
+    <div class="card shadow-lg">
+        <div class="card-body">
+            <table class="table table-bordered table-hover">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Title</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="expense : ${expenses}">
+                        <td th:text="${expense.title}">Title</td>
+                        <td th:text="${expense.amount}">100</td>
+                        <td th:text="${#temporals.format(expense.date, 'dd MMM yyyy')}">01 Jan 2025</td>
+                        <td th:text="${expense.category}">Food</td>
+                        <td>
+                            <a th:href="@{/expenses/edit/{id}(id=${expense.id})}" class="btn btn-sm btn-warning">Edit</a>
+                            <a th:href="@{/expenses/delete/{id}(id=${expense.id})}" 
+                               class="btn btn-sm btn-danger ms-2"
+                               onclick="return confirm('Are you sure you want to delete this expense?');">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(expenses)}">
+                        <td colspan="5" class="text-center text-muted">No expenses found.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/expenses?page=1}">First</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/expenses?page=${currentPage - 1}}">Prev</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a class="page-link" th:href="@{/expenses?page=${currentPage + 1}}">Next</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a class="page-link" th:href="@{/expenses?page=${totalPages}}">Last</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Category Pie Chart -->
+    <div class="card mb-4 shadow-sm mt-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Category-wise Expense Chart</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="expenseChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Monthly Line Chart -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Monthly Expense Overview</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="monthlyChartOverview"></canvas>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true" th:if="${message}">
+            <div class="d-flex">
+                <div class="toast-body" th:text="${message}"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-success text-white text-center py-3 mt-5">
+    <p class="mb-0">&copy; 2025 Expense Tracker App</p>
+</footer>
+
+<script>
+    var categoryData = JSON.parse('[[${categorySummaryJson}]]');
+    var monthlyData = JSON.parse('[[${monthlySummaryJson}]]');
+
+    // CATEGORY PIE CHART
+    const categoryCtx = document.getElementById('expenseChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+                data: Object.values(categoryData),
+                backgroundColor: ['#f44336', '#2196f3', '#ffeb3b', '#4caf50']
+            }]
+        }
+    });
+
+    // MONTHLY BAR CHART
+    const monthlyCtx = document.getElementById('monthlyChartOverview').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(monthlyData),
+            datasets: [{
+                label: 'Monthly Expense',
+                data: Object.values(monthlyData),
+                backgroundColor: '#03a9f4'
+            }]
+        }
+    });
+</script>
+</body>
+</html>

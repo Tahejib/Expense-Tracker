@@ -1,0 +1,187 @@
+<!<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Expense Summary</title>
+
+    <!-- Chart.js, html2canvas, jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        body {
+            background: #fff;
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        #content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 60%;
+            margin: 20px auto;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+<div id="content">
+
+    <h1>Expense Summary</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="entry : ${categoryTotals}">
+                <td th:text="${entry.key}"></td>
+                <td th:text="${entry.value}"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Category-wise Expense Chart</h2>
+
+    <div class="chart-container">
+        <canvas id="categoryChart"></canvas>
+    </div>
+
+    <button onclick="downloadChart()">Download Chart as PNG</button>
+    <button onclick="exportTableToPDF()">Download Table as PDF</button>
+
+    <a href="/expenses">← Back to Expenses</a>
+
+</div>
+
+<!-- JavaScript Section -->
+<script th:inline="javascript">
+    const summaryData = JSON.parse('[[${monthlySummaryJson}]]');
+
+    const labels = Object.keys(summaryData);
+    const data = Object.values(summaryData);
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Expense by Category',
+                data: data,
+                backgroundColor: [
+                    'rgba(243, 156, 18, 0.8)',
+                    'rgba(52, 152, 219, 0.8)',
+                    'rgba(46, 204, 113, 0.8)',
+                    'rgba(231, 76, 60, 0.8)',
+                    'rgba(155, 89, 182, 0.8)'
+                ],
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 1500,
+                easing: 'easeOutBounce'
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    function downloadChart() {
+        const chartCanvas = document.getElementById('categoryChart');
+        const link = document.createElement('a');
+        link.download = 'expense_summary_chart.png';
+        link.href = chartCanvas.toDataURL('image/png');
+        link.click();
+    }
+
+    async function exportTableToPDF() {
+        const table = document.querySelector('table');
+        const canvas = await html2canvas(table, { scale: 2 });
+
+        const imageData = canvas.toDataURL('image/png');
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        const imgProps = pdf.getImageProperties(imageData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imageData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight);
+        pdf.save('expense_table.pdf');
+    }
+</script>
+
+</body>
+</html>
+

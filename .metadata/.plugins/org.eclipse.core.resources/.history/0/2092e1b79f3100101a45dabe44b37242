@@ -1,0 +1,63 @@
+<!-- File: src/main/resources/templates/add_expense.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Add Expense</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body>
+<div class="container mt-4">
+    <h2 th:text="${expense.id} != null ? 'Edit Expense' : 'Add New Expense'">Add New Expense</h2>
+
+    <div th:if="${message}" class="alert alert-success" role="alert">
+        <span th:text="${message}"></span>
+    </div>
+
+    <form th:action="@{${expense.id} != null ? '/expenses/edit/' + ${expense.id} : '/expenses/add'}"
+          th:object="${expense}" method="post">
+
+        <div class="mb-3">
+            <label>Title</label>
+            <input type="text" th:field="*{title}" class="form-control" required />
+            <div th:if="${#fields.hasErrors('title')}" class="text-danger small" th:errors="*{title}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label>Amount</label>
+            <input type="number" step="0.01" th:field="*{amount}" class="form-control" required />
+            <div th:if="${#fields.hasErrors('amount')}" class="text-danger small" th:errors="*{amount}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label>Date</label>
+            <input type="date" th:field="*{date}" class="form-control" required />
+            <div th:if="${#fields.hasErrors('date')}" class="text-danger small" th:errors="*{date}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label>Category</label>
+            <select th:field="*{category}" class="form-select" required>
+                <option value="">-- Select Category --</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Health">Health</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Other">Other</option>
+            </select>
+            <div th:if="${#fields.hasErrors('category')}" class="text-danger small" th:errors="*{category}"></div>
+        </div>
+
+        <button type="submit" class="btn btn-success"
+                th:text="${expense.id} != null ? 'Update' : 'Add'">Add</button>
+        <a th:href="@{/expenses}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<div th:if="${message}" class="alert alert-success" role="alert">
+    <span th:text="${message}"></span>
+</div>
+
+</body>
+</html>

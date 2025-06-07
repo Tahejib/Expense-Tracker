@@ -1,0 +1,100 @@
+/* Global Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer */
+footer {
+    background-color: #198754; /* Bootstrap Success Dark */
+    color: white;
+    font-size: 0.9rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+/* Specific Buttons */
+.btn-outline-primary:hover,
+.btn-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.btn-outline-success:hover,
+.btn-success:hover {
+    background-color: #198754;
+    color: #fff;
+}
+
+/* Table */
+.table {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+/* Table Hover */
+.table-hover tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Charts */
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Alerts */
+.alert-success {
+    border-radius: 0.75rem;
+}
+
+/* Forms */
+input[type="text"],
+input[type="date"],
+select {
+    border-radius: 0.75rem;
+}
+
+/* Search/Filter Form */
+form.d-flex input, form.d-flex select {
+    border-radius: 2rem;
+}
+
+/* Misc */
+h2, h5 {
+    font-weight: 600;
+}
+
+/* Link reset */
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}

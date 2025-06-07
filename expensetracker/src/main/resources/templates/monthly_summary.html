@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Monthly Expense Summary</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            padding: 30px;
+            font-family: Arial, sans-serif;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin: 30px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="text-center">Monthly Expense Summary</h2>
+
+        <!-- Monthly Summary Table -->
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Month</th>
+                    <th>Total Expense</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="entry : ${monthlySummary}">
+                    <td th:text="${entry.key}"></td>
+                    <td th:text="${entry.value}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Monthly Summary Bar Chart -->
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+
+        <div class="text-center mt-4">
+            <a th:href="@{/expenses}" class="btn btn-primary">Back to Expenses</a>
+        </div>
+    </div>
+
+    <!-- Chart Script -->
+   <script th:inline="javascript">
+    let monthlyData = /*[[${monthlySummaryJson}]]*/ {};
+    let months = Object.keys(monthlyData);
+    let totals = Object.values(monthlyData);
+
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Monthly Expenses',
+                data: totals,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 100
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            }
+        }
+    });
+</script>
+
+
+</body>
+</html>
